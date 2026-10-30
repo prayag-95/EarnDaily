@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "539669345138",
+    "firebase_url": "https://earndaily-c7aa5-default-rtdb.firebaseio.com",
+    "project_id": "earndaily-c7aa5",
+    "storage_bucket": "earndaily-c7aa5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:539669345138:android:3548e2f84d84478cc1a3eb",
+        "android_client_info": {
+          "package_name": "com.earndaily.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "539669345138-pjj7knjb7rsbbfcvfel8aic8skh2t9mu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.earndaily.app",
+            "certificate_hash": "0b6c9adf82e8bb658da0b873d6a0b11b7532d55e"
+          }
+        },
+        {
+          "client_id": "539669345138-69lghs30stcadivsctfj09s3ba272mu4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANSPs1pDkCQH7BhdCIWfbz21I7Hjl-DFg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "539669345138-69lghs30stcadivsctfj09s3ba272mu4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

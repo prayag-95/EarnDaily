@@ -1,0 +1,64 @@
+{
+  "rules": {
+    "users": {
+      ".indexOn": ["refCode", "email", "createdAt", "status"],
+      ".read": true,
+      ".write": true
+    },
+    "offers": {
+      ".indexOn": ["status", "category", "createdAt"],
+      ".read": true,
+      ".write": true
+    },
+    "offerLikes": {
+      ".read": true,
+      ".write": true
+    },
+    "banners": {
+      ".read": true,
+      ".write": true
+    },
+    "promotions": {
+      ".read": true,
+      ".write": true
+    },
+    "notifications": {
+      ".indexOn": ["timestamp"],
+      ".read": true,
+      ".write": true
+    },
+    "appSettings": {
+      ".read": true,
+      ".write": true
+    },
+    "taskSubmissions": {
+      ".indexOn": ["userId", "status", "timestamp", "offerId"],
+      ".read": true,
+      ".write": true
+    },
+    "withdrawals": {
+      ".indexOn": ["userId", "status", "timestamp"],
+      ".read": true,
+      ".write": true
+    },
+    "redeemCodes": {
+      ".indexOn": ["code", "used", "forUser"],
+      ".read": true,
+      ".write": true
+    },
+    "adminReferRewards": {
+      ".indexOn": ["timestamp", "friendUid", "code"],
+      ".read": true,
+      ".write": true
+    },
+    "referHistory": {
+      ".indexOn": ["timestamp", "referrerId", "newUserId", "code"],
+      ".read": true,
+      ".write": true
+    },
+    "pendingReferrals": {
+      ".read": true,
+      ".write": true
+    }
+  }
+}

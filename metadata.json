@@ -1,0 +1,6 @@
+{
+  "name": "EarnDaily",
+  "description": "Daily reward and task earning platform with user tasks, wallet, payments, and admin control.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

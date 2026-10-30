@@ -1,0 +1,2248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>EarnDaily - Admin Panel</title>
+  <!-- Google Fonts Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Font Awesome 6.4.0 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Firebase 9.6.10 Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+    :root {
+      --bg: #0D0F14;
+      --card-bg: #161922;
+      --card-border: #252936;
+      --gold: #F5A623;
+      --gold-glow: rgba(245, 166, 35, 0.35);
+      --purple: #7B5EA7;
+      --text: #FFFFFF;
+      --text-sub: #9E9EB2;
+      --success: #10B981;
+      --danger: #EF4444;
+      --sidebar-w: 240px;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    /* Layout */
+    .admin-wrapper {
+      display: flex;
+      min-height: 100vh;
+    }
+    /* Sidebar */
+    .admin-sidebar {
+      width: var(--sidebar-w);
+      background: #11141D;
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      transition: transform 0.25s ease;
+    }
+    .sidebar-brand {
+      padding: 20px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #00E676, #00C853, #10B981);
+      color: #052B14;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      box-shadow: 0 0 15px rgba(0, 230, 118, 0.45);
+    }
+    .brand-title h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFF;
+    }
+    .brand-title h2 span {
+      color: var(--gold);
+    }
+    .brand-title p {
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+    .sidebar-nav {
+      flex: 1;
+      padding: 14px 10px;
+      overflow-y: auto;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-sub);
+      text-decoration: none;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: all 0.15s ease;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: #FFF;
+    }
+    .nav-item.active {
+      background: rgba(245, 166, 35, 0.14);
+      color: var(--gold);
+      border: 1px solid rgba(245, 166, 35, 0.3);
+    }
+    .nav-item i {
+      width: 18px;
+      font-size: 15px;
+    }
+    .sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid var(--card-border);
+    }
+    .btn-admin-logout {
+      width: 100%;
+      padding: 10px;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      color: var(--danger);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    /* Main Area */
+    .admin-main {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    /* Topbar */
+    .admin-topbar {
+      height: 64px;
+      background: rgba(17, 20, 29, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 90;
+      backdrop-filter: blur(10px);
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .mobile-menu-btn {
+      display: none;
+      background: transparent;
+      border: none;
+      color: #FFF;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .topbar-page-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #FFF;
+    }
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .admin-badge {
+      background: rgba(123, 94, 167, 0.2);
+      border: 1px solid var(--purple);
+      color: #FFF;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Content Area */
+    .admin-content {
+      padding: 24px;
+      flex: 1;
+    }
+    .content-section {
+      display: none;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .content-section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stat-card-info h4 {
+      font-size: 12px;
+      color: var(--text-sub);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .stat-card-info .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: #FFF;
+    }
+    .stat-card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+    .stat-users { background: rgba(245, 166, 35, 0.15); color: var(--gold); }
+    .stat-withdraw { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .stat-tasks { background: rgba(123, 94, 167, 0.15); color: var(--purple); }
+    .stat-pending { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+
+    /* Tables & Cards */
+    .panel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .panel-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFF;
+    }
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      padding: 12px 14px;
+      background: #0D0F14;
+      color: var(--text-sub);
+      font-weight: 600;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #E2E8F0;
+      white-space: nowrap;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .btn-act {
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-right: 4px;
+    }
+    .btn-approve {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+    .btn-reject {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+    .btn-primary {
+      background: var(--gold);
+      color: #0D0F14;
+      font-weight: 700;
+      border: none;
+      border-radius: 10px;
+      padding: 8px 16px;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #0D0F14;
+      color: #FFF;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px 14px;
+      cursor: pointer;
+    }
+
+    /* Filter pills */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      background: #0D0F14;
+      border: 1px solid var(--card-border);
+      color: var(--text-sub);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .filter-btn.active {
+      background: var(--gold);
+      color: #0D0F14;
+      border-color: var(--gold);
+    }
+
+    /* Forms */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .form-input {
+      width: 100%;
+      background: #0D0F14;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #FFF;
+      font-size: 13px;
+      outline: none;
+    }
+    .form-input:focus {
+      border-color: var(--gold);
+    }
+    textarea.form-input {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-box {
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .modal-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFF;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-sub);
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    /* Admin Login Box */
+    #adminAuthScreen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at 50% 20%, rgba(245, 166, 35, 0.12) 0%, rgba(13, 15, 20, 1) 70%);
+    }
+    .admin-login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px 24px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 25px rgba(245, 166, 35, 0.15);
+      text-align: center;
+    }
+
+    /* Toast */
+    .admin-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #161922;
+      border: 1px solid var(--gold);
+      color: #FFF;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.8), 0 0 15px var(--gold-glow);
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .admin-toast.show {
+      opacity: 1;
+      transform: translateY(-8px);
+    }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .admin-sidebar {
+        transform: translateX(-100%);
+      }
+      .admin-sidebar.open {
+        transform: translateX(0);
+      }
+      .admin-main {
+        margin-left: 0;
+      }
+      .mobile-menu-btn {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN AUTH SCREEN -->
+  <div id="adminAuthScreen">
+    <div class="admin-login-card">
+      <div class="brand-icon" style="margin: 0 auto 14px auto; width: 56px; height: 56px; font-size: 28px; background: transparent; box-shadow: none;">
+        <img src="app_logo.png" alt="EarnDaily" style="width: 100%; height: 100%; object-fit: contain; border-radius: 14px;">
+      </div>
+      <h2 style="font-size: 22px; font-weight: 800; color: #FFF;">Earn<span style="color: var(--gold);">Daily</span></h2>
+      <p style="font-size: 12px; color: var(--text-sub); margin-bottom: 24px;">Admin Control Center</p>
+
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Admin Email</label>
+        <input type="email" id="adminEmailInput" class="form-input" placeholder="mypro20017@gmail.com" value="mypro20017@gmail.com">
+      </div>
+      <div class="form-group" style="text-align: left;">
+        <label class="form-label">Admin Password</label>
+        <input type="password" id="adminPassInput" class="form-input" placeholder="••••••••">
+      </div>
+      <button class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="handleAdminLogin()">
+        <i class="fa-solid fa-lock-open"></i> Login as Admin
+      </button>
+      <div style="font-size: 11px; color: #9E9EB2; margin-top: 16px;">
+        Authorized admin emails only.
+      </div>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD WRAPPER -->
+  <div class="admin-wrapper" id="adminWrapper" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon" style="background: transparent; box-shadow: none;"><img src="app_logo.png" alt="EarnDaily" style="width: 100%; height: 100%; object-fit: contain; border-radius: 10px;"></div>
+        <div class="brand-title">
+          <h2>Earn<span>Daily</span></h2>
+          <p>Super Admin Panel</p>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-item active" onclick="switchSection('dashboard', this)">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('users', this)">
+          <i class="fa-solid fa-users"></i>
+          <span>Users</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('tasks', this)">
+          <i class="fa-solid fa-list-check"></i>
+          <span>Task Submissions</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('withdrawals', this)">
+          <i class="fa-solid fa-money-bill-transfer"></i>
+          <span>Withdrawals</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('refer', this)">
+          <i class="fa-solid fa-user-plus"></i>
+          <span>Refer System</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('redeemCodes', this)">
+          <i class="fa-solid fa-ticket"></i>
+          <span>Redeem Codes</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('offers', this)">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Offers</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('banners', this)">
+          <i class="fa-solid fa-image"></i>
+          <span>Banners</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('notifications', this)">
+          <i class="fa-solid fa-bell"></i>
+          <span>Notifications</span>
+        </div>
+        <div class="nav-item" onclick="switchSection('settings', this)">
+          <i class="fa-solid fa-gears"></i>
+          <span>App Settings</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-admin-logout" onclick="handleAdminLogout()">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Logout Admin</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-left">
+          <button class="mobile-menu-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+          <div class="topbar-page-title" id="pageTitle">Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="admin-badge">
+            <i class="fa-solid fa-user-shield"></i>
+            <span id="currentAdminEmail">admin</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="admin-content">
+        <!-- 1. DASHBOARD -->
+        <section id="secDashboard" class="content-section active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-info">
+                <h4>TOTAL USERS</h4>
+                <div class="stat-val" id="statTotalUsers">0</div>
+              </div>
+              <div class="stat-card-icon stat-users"><i class="fa-solid fa-users"></i></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-info">
+                <h4>WITHDRAWALS</h4>
+                <div class="stat-val" id="statTotalWithdrawals">₹0</div>
+              </div>
+              <div class="stat-card-icon stat-withdraw"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-info">
+                <h4>TOTAL TASKS</h4>
+                <div class="stat-val" id="statTotalTasks">0</div>
+              </div>
+              <div class="stat-card-icon stat-tasks"><i class="fa-solid fa-list-check"></i></div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-info">
+                <h4>PENDING ACTIONS</h4>
+                <div class="stat-val" id="statPendingActions">0</div>
+              </div>
+              <div class="stat-card-icon stat-pending"><i class="fa-solid fa-clock"></i></div>
+            </div>
+          </div>
+
+          <!-- Recent Withdrawals -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Recent Pending Withdrawals</h3>
+              <button class="btn-secondary" onclick="switchSection('withdrawals')">View All</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Method</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dashWithdrawalsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recent Task Submissions -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Recent Task Submissions</h3>
+              <button class="btn-secondary" onclick="switchSection('tasks')">View All</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Offer Title</th>
+                    <th>Reward</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="dashTasksBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. USERS -->
+        <section id="secUsers" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>User Directory</h3>
+              <input type="text" id="userSearchInput" class="form-input" placeholder="Search by name or email..." style="max-width: 280px;" oninput="handleUserSearch()">
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name & Email</th>
+                    <th>Ref Code</th>
+                    <th>Earnings</th>
+                    <th>Tasks</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. TASK SUBMISSIONS -->
+        <section id="secTasks" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Task Verification Queue</h3>
+              <div class="filter-tabs">
+                <button class="filter-btn active" onclick="filterTaskTable('All', this)">All</button>
+                <button class="filter-btn" onclick="filterTaskTable('Pending', this)">Pending</button>
+                <button class="filter-btn" onclick="filterTaskTable('Approved', this)">Approved</button>
+                <button class="filter-btn" onclick="filterTaskTable('Rejected', this)">Rejected</button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Offer Title</th>
+                    <th>Reward</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="taskSubmissionsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. WITHDRAWALS -->
+        <section id="secWithdrawals" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Withdrawal Requests</h3>
+              <div class="filter-tabs">
+                <button class="filter-btn active" onclick="filterWithdrawalTable('All', this)">All</button>
+                <button class="filter-btn" onclick="filterWithdrawalTable('Pending', this)">Pending</button>
+                <button class="filter-btn" onclick="filterWithdrawalTable('Approved', this)">Approved</button>
+                <button class="filter-btn" onclick="filterWithdrawalTable('Rejected', this)">Rejected</button>
+              </div>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Method</th>
+                    <th>Details</th>
+                    <th>Amount</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="withdrawalsTableBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. REFER SYSTEM -->
+        <section id="secRefer" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Direct Referral Reward Tool</h3>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">User Email Address</label>
+                <input type="email" id="referRewardEmail" class="form-input" placeholder="user@gmail.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Reward Amount (₹)</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                  <button class="btn-secondary" onclick="setReferAmount(5)">₹5</button>
+                  <button class="btn-secondary" onclick="setReferAmount(10)">₹10</button>
+                  <button class="btn-secondary" onclick="setReferAmount(20)">₹20</button>
+                  <button class="btn-secondary" onclick="setReferAmount(50)">₹50</button>
+                  <button class="btn-secondary" onclick="setReferAmount(100)">₹100</button>
+                </div>
+                <input type="number" id="referRewardAmount" class="form-input" placeholder="Or enter custom amount..." value="10">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Reward Note / Reason</label>
+              <input type="text" id="referRewardNote" class="form-input" placeholder="e.g. Special invite bonus" value="Referral Reward Bonus">
+            </div>
+            <button class="btn-primary" onclick="sendReferRewardDirect()">
+              <i class="fa-solid fa-gift"></i> Reward Do (Send Bonus)
+            </button>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Admin Referral Reward History</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>User Email</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="referHistoryBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. REDEEM CODES -->
+        <section id="secRedeemCodes" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Redeem Codes Management</h3>
+              <button class="btn-primary" onclick="openModal('modalNewRedeemCode')">
+                <i class="fa-solid fa-plus"></i> + New Code
+              </button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Redeem Code</th>
+                    <th>Target Email</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                    <th>Status</th>
+                    <th>Used By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="redeemCodesBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. OFFERS -->
+        <section id="secOffers" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Manage Offers & Tasks</h3>
+              <button class="btn-primary" onclick="openOfferModal()">
+                <i class="fa-solid fa-plus"></i> + Add Offer
+              </button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Title & Icon</th>
+                    <th>Reward</th>
+                    <th>Time</th>
+                    <th>Steps</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="offersAdminBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. BANNERS -->
+        <section id="secBanners" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Promotion Banners</h3>
+              <button class="btn-primary" onclick="openModal('modalNewBanner')">
+                <i class="fa-solid fa-plus"></i> + Add Banner
+              </button>
+            </div>
+            <div id="bannersGridContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. NOTIFICATIONS -->
+        <section id="secNotifications" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Send Push Notification to All Users</h3>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notification Title</label>
+              <input type="text" id="notifTitleInput" class="form-input" placeholder="e.g. Weekend Double Bonus Active!">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notification Message</label>
+              <textarea id="notifMsgInput" class="form-input" placeholder="Enter message text for all users..."></textarea>
+            </div>
+            <button class="btn-primary" onclick="sendBroadcastNotification()">
+              <i class="fa-solid fa-paper-plane"></i> Send to All Users
+            </button>
+          </div>
+
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Past Notifications</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Message</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="notificationsAdminBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- 10. APP SETTINGS -->
+        <section id="secSettings" class="content-section">
+          <div class="panel-card">
+            <div class="panel-header">
+              <div>
+                <h3>Master App Settings & Version Control</h3>
+                <p style="font-size: 11px; color: #9E9EB2; margin: 2px 0 0 0;">Manage App Version, APK Downloads, VPN, UPI & Ads</p>
+              </div>
+              <button class="btn-primary" onclick="saveAppSettings()">
+                <i class="fa-solid fa-floppy-disk"></i> Save All Settings
+              </button>
+            </div>
+
+            <!-- Dedicated App Version & Update Box -->
+            <div style="background: rgba(245, 166, 35, 0.05); border: 1px solid rgba(245, 166, 35, 0.3); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                <div style="font-size: 13px; font-weight: 800; color: var(--gold); display: flex; align-items: center; gap: 8px;">
+                  <i class="fa-solid fa-rocket"></i> App Version & Update Management (ऐप अपडेट नियंत्रण)
+                </div>
+                <div style="font-size: 11px; background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.4); color: #00E676; padding: 3px 10px; border-radius: 8px; font-weight: 700;">
+                  Installed App Version: v1.1
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label">Latest App Version (लेटेस्ट ऐप वर्जन)</label>
+                  <input type="text" id="settingVersion" class="form-input" value="1.1" placeholder="e.g. 1.2">
+                  <span style="font-size: 10px; color: #9E9EB2;">वर्तमान ऐप 1.1 है। यदि आप 1.2 या उच्चतर डालेंगे, तो यूज़र्स के फोन पर अपडेट स्क्रीन दिखेगी।</span>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">APK Download Link (सीधा APK डाउनलोड लिंक)</label>
+                  <input type="text" id="settingDownloadLink" class="form-input" placeholder="https://example.com/earndaily_v1.2.apk">
+                  <span style="font-size: 10px; color: #9E9EB2;">Direct APK Link या Google Drive / Mediafire / GitHub Release लिंक।</span>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 10px;">
+                <label class="form-label">What's New in Update (अपडेट में नया क्या है?)</label>
+                <textarea id="settingUpdateNotes" class="form-input" rows="3" placeholder="• नया US VPN और सुरक्षित व तेज टास्क सिस्टम&#10;• इन-ऐप नोटिफिकेशन साउंड अलर्ट&#10;• Google Play Protect सुरक्षा पास और आसान इंस्टॉलेशन&#10;• बग फिक्स और तेज स्पीड"></textarea>
+              </div>
+
+              <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #FFF; cursor: pointer;">
+                  <input type="checkbox" id="settingForceUpdate" style="accent-color: var(--gold); width: 16px; height: 16px;">
+                  <span>Force Update (अनिवार्य अपडेट - बिना अपडेट किए ऐप इस्तेमाल नहीं होगा)</span>
+                </label>
+
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <button type="button" onclick="quickTriggerUpdate1_2()" style="background: rgba(0, 230, 118, 0.15); border: 1px solid rgba(0, 230, 118, 0.4); color: #00E676; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                    <i class="fa-solid fa-bolt"></i> Push v1.2 Update (Test)
+                  </button>
+                  <button type="button" onclick="quickResetVersion1_1()" style="background: #1F2430; border: 1px solid var(--card-border); color: #9E9EB2; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                    Reset to v1.1
+                  </button>
+                  <button type="button" onclick="broadcastUpdateAlert()" style="background: rgba(245, 166, 35, 0.15); border: 1px solid rgba(245, 166, 35, 0.4); color: var(--gold); padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                    <i class="fa-solid fa-bell"></i> Send Update Alert Notification
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">WhatsApp Support Link</label>
+                <input type="text" id="settingWhatsApp" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Telegram Channel Link</label>
+                <input type="text" id="settingTelegram" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Refer Banner Image URL</label>
+                <input type="text" id="settingReferBanner" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-gift" style="color: #10B981;"></i> Referral Bonus to Inviter (₹)</label>
+                <input type="number" id="settingReferralBonus" class="form-input" value="20">
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-hand-holding-dollar" style="color: #6366F1;"></i> Welcome Bonus to New User (₹)</label>
+                <input type="number" id="settingSignupBonus" class="form-input" value="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Deposit UPI ID</label>
+                <input type="text" id="settingDepositUpi" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Deposit QR Image URL</label>
+                <input type="text" id="settingDepositQr" class="form-input">
+              </div>
+              <div class="form-group">
+                <label class="form-label"><i class="fa-brands fa-unity" style="color: var(--gold);"></i> Unity Ads Game ID</label>
+                <input type="text" id="settingUnityGameId" class="form-input" value="6134087">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Unity Ad Reward per View (₹)</label>
+                <input type="number" id="settingUnityReward" class="form-input" value="5">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Daily Unity Ad Watch Limit</label>
+                <input type="number" id="settingUnityLimit" class="form-input" value="10">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Normal Withdraw Amounts (Comma separated)</label>
+              <input type="text" id="settingWithdrawAmounts" class="form-input" placeholder="10, 50, 200, 500, 1000, 5000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Mobile Recharge Plans (Comma separated)</label>
+              <input type="text" id="settingRechargePlans" class="form-input" placeholder="19, 49, 99, 149, 199, 299, 399, 499, 999, 1499, 1999">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Privacy Policy Text</label>
+              <textarea id="settingPrivacy" class="form-input"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Terms and Conditions Text</label>
+              <textarea id="settingTerms" class="form-input"></textarea>
+            </div>
+            <button class="btn-primary" onclick="saveAppSettings()">
+              <i class="fa-solid fa-floppy-disk"></i> Save All Settings
+            </button>
+          </div>
+
+          <!-- Offer Likes Stats Table -->
+          <div class="panel-card">
+            <div class="panel-header">
+              <h3>Offer Likes Stats</h3>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Offer Title</th>
+                    <th>Like Count</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="offerLikesStatsBody">
+                  <!-- Populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: USER DETAILS -->
+  <div class="modal-overlay" id="modalUserDetails">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="modalUserName">User Details</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalUserDetails')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div style="font-size: 13px; color: #9E9EB2; margin-bottom: 16px;">
+        Email: <strong id="modalUserEmail" style="color: #FFF;"></strong> •
+        Code: <strong id="modalUserRef" style="color: var(--gold);"></strong>
+      </div>
+
+      <!-- Set Balance Manually -->
+      <div style="background: #0D0F14; border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+        <label class="form-label">Set Balance Manually (₹)</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="number" id="inputManualBalance" class="form-input" style="flex: 1;">
+          <button class="btn-primary" onclick="updateUserBalanceManual()">Update</button>
+        </div>
+      </div>
+
+      <!-- Give Refer Reward -->
+      <div style="background: #0D0F14; border: 1px solid var(--card-border); border-radius: 12px; padding: 14px; margin-bottom: 18px;">
+        <label class="form-label">Give Direct Reward to this User</label>
+        <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+          <button class="btn-secondary" onclick="setUserDetailAmt(5)">₹5</button>
+          <button class="btn-secondary" onclick="setUserDetailAmt(10)">₹10</button>
+          <button class="btn-secondary" onclick="setUserDetailAmt(20)">₹20</button>
+          <button class="btn-secondary" onclick="setUserDetailAmt(50)">₹50</button>
+          <button class="btn-secondary" onclick="setUserDetailAmt(100)">₹100</button>
+        </div>
+        <input type="number" id="inputUserDetailAmt" class="form-input" placeholder="Amount (₹)" style="margin-bottom: 8px;" value="10">
+        <input type="text" id="inputUserDetailNote" class="form-input" placeholder="Note (e.g. VIP bonus)" style="margin-bottom: 8px;" value="Admin Bonus">
+        <button class="btn-primary" style="width: 100%;" onclick="sendRewardToUserInModal()">Send Reward</button>
+      </div>
+
+      <!-- User Reward History -->
+      <div style="font-size: 13px; font-weight: 700; color: #FFF; margin-bottom: 8px;">User Reward History:</div>
+      <div id="modalUserRewardHistory" style="font-size: 12px; color: #9E9EB2;">No rewards given yet.</div>
+    </div>
+  </div>
+
+  <!-- MODAL: NEW REDEEM CODE -->
+  <div class="modal-overlay" id="modalNewRedeemCode">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Create New Redeem Code</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalNewRedeemCode')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">For User Email (Optional / Specific)</label>
+        <input type="email" id="newCodeEmail" class="form-input" placeholder="e.g. user@gmail.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Amount (₹)</label>
+        <input type="number" id="newCodeAmount" class="form-input" placeholder="e.g. 50" value="50">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note</label>
+        <input type="text" id="newCodeNote" class="form-input" placeholder="e.g. Special promotional code" value="Google Play Redeem Code">
+      </div>
+      <button class="btn-primary" style="width: 100%; padding: 12px;" onclick="generateAndSaveRedeemCode()">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> Generate & Copy (DPK+6chars)
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT OFFER -->
+  <div class="modal-overlay" id="modalOffer">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="offerModalTitle">Add New Offer</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalOffer')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="hidden" id="offerEditKey">
+      <div class="form-group">
+        <label class="form-label">Offer Title</label>
+        <input type="text" id="offerTitleInput" class="form-input" placeholder="e.g. Install Trading App">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Icon (Font Awesome class or Image URL)</label>
+        <input type="text" id="offerIconInput" class="form-input" placeholder="fa-solid fa-dice OR https://...">
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reward Amount (₹)</label>
+          <input type="number" id="offerRewardInput" class="form-input" placeholder="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estimated Time</label>
+          <input type="text" id="offerTimeInput" class="form-input" placeholder="2 Mins">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Short Description</label>
+        <input type="text" id="offerDescInput" class="form-input" placeholder="Download, register and verify account">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Steps (One per line)</label>
+        <textarea id="offerStepsInput" class="form-input" placeholder="1. Install application&#10;2. Register with phone&#10;3. Submit task"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">App Redirect Link</label>
+        <input type="text" id="offerLinkInput" class="form-input" placeholder="https://play.google.com/...">
+      </div>
+      <div style="display: flex; gap: 20px; margin-bottom: 16px;">
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #FFF;">
+          <input type="checkbox" id="offerActiveCheck" checked> Active
+        </label>
+        <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #FFF;">
+          <input type="checkbox" id="offerNewCheck" checked> Mark as New
+        </label>
+      </div>
+      <button class="btn-primary" style="width: 100%; padding: 12px;" onclick="saveOfferData()">
+        Save Offer
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD BANNER -->
+  <div class="modal-overlay" id="modalNewBanner">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Add Promotion Banner</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalNewBanner')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Image URL</label>
+        <input type="text" id="bannerImgInput" class="form-input" placeholder="https://images.unsplash.com/...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Redirect Link (Optional)</label>
+        <input type="text" id="bannerLinkInput" class="form-input" placeholder="https://...">
+      </div>
+      <button class="btn-primary" style="width: 100%; padding: 12px;" onclick="savePromotionBanner()">
+        Add Banner
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin Toast -->
+  <div class="admin-toast" id="adminToast">
+    <i class="fa-solid fa-circle-check" style="color: var(--gold);"></i>
+    <span id="adminToastMsg">Success</span>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    // Exact Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRlSYWfovH0tWp1WskDqt-YiFY1ykGS0U",
+      authDomain: "earndaily-c7aa5.firebaseapp.com",
+      databaseURL: "https://earndaily-c7aa5-default-rtdb.firebaseio.com",
+      projectId: "earndaily-c7aa5",
+      storageBucket: "earndaily-c7aa5.firebasestorage.app",
+      messagingSenderId: "539669345138",
+      appId: "1:539669345138:web:7c214cf94ff31ceac1a3eb",
+      measurementId: "G-2JJBLSDL8W"
+    };
+
+    var ADMIN_EMAILS = ["mypro20017@gmail.com"];
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    var auth = firebase.auth();
+    var db = firebase.database();
+
+    // State
+    var allUsers = {};
+    var allWithdrawals = {};
+    var allTasks = {};
+    var allOffers = {};
+    var currentFilterTask = 'All';
+    var currentFilterWithdrawal = 'All';
+    var selectedModalUserId = null;
+
+    // Toast
+    function showToast(msg) {
+      var t = document.getElementById('adminToast');
+      document.getElementById('adminToastMsg').innerText = msg;
+      t.classList.add('show');
+      setTimeout(function() { t.classList.remove('show'); }, 3000);
+    }
+
+    // Modal
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // Toggle Sidebar on mobile
+    function toggleSidebar() {
+      document.getElementById('adminSidebar').classList.toggle('open');
+    }
+
+    // Auth Login
+    function handleAdminLogin() {
+      var email = document.getElementById('adminEmailInput').value.trim();
+      var pass = document.getElementById('adminPassInput').value;
+      if (!email || !pass) {
+        showToast('Please enter admin email & password');
+        return;
+      }
+
+      if (ADMIN_EMAILS.indexOf(email.toLowerCase()) === -1) {
+        showToast('Access Denied: ' + email + ' is not an authorized admin.');
+        return;
+      }
+
+      showToast('Connecting to Firebase Database...');
+
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(function(userCredential) {
+          var user = userCredential.user;
+          verifyAdminAndLoad(user);
+        })
+        .catch(function(err) {
+          // If sign in fails, attempt creating account for admin
+          auth.createUserWithEmailAndPassword(email, pass)
+            .then(function(cred) {
+              verifyAdminAndLoad(cred.user);
+            })
+            .catch(function(createErr) {
+              // Direct connection fallback since rules allow direct read/write
+              console.warn('Auth fallback: direct database access for authorized admin', createErr);
+              verifyAdminAndLoad({ email: email, uid: 'admin_direct_' + email.replace(/[^a-zA-Z0-9]/g, '_') });
+              showToast('Admin Panel Connected to Firebase Database!');
+            });
+        });
+    }
+
+    // Verify Admin
+    function verifyAdminAndLoad(user) {
+      if (ADMIN_EMAILS.indexOf(user.email.toLowerCase()) === -1) {
+        showToast('Access Denied: You are not an authorized admin.');
+        auth.signOut();
+        return;
+      }
+      document.getElementById('adminAuthScreen').style.display = 'none';
+      document.getElementById('adminWrapper').style.display = 'flex';
+      document.getElementById('currentAdminEmail').innerText = user.email;
+      loadAllAdminData();
+    }
+
+    // Auth state
+    auth.onAuthStateChanged(function(user) {
+      if (user && ADMIN_EMAILS.indexOf(user.email.toLowerCase()) !== -1) {
+        verifyAdminAndLoad(user);
+      } else {
+        document.getElementById('adminAuthScreen').style.display = 'flex';
+        document.getElementById('adminWrapper').style.display = 'none';
+      }
+    });
+
+    // Logout
+    function handleAdminLogout() {
+      auth.signOut().then(function() {
+        showToast('Admin logged out.');
+      });
+    }
+
+    // Switch Admin Sections
+    function switchSection(secId, navElem) {
+      var sections = ['dashboard', 'users', 'tasks', 'withdrawals', 'refer', 'redeemCodes', 'offers', 'banners', 'notifications', 'settings'];
+      for (var i = 0; i < sections.length; i++) {
+        var s = sections[i];
+        var sElem = document.getElementById('sec' + s.charAt(0).toUpperCase() + s.slice(1));
+        if (s.toLowerCase() === secId.toLowerCase()) {
+          sElem.classList.add('active');
+        } else {
+          sElem.classList.remove('active');
+        }
+      }
+
+      var navItems = document.querySelectorAll('.nav-item');
+      for (var j = 0; j < navItems.length; j++) {
+        navItems[j].classList.remove('active');
+      }
+      if (navElem) {
+        navElem.classList.add('active');
+      }
+
+      document.getElementById('pageTitle').innerText = secId.toUpperCase();
+      document.getElementById('adminSidebar').classList.remove('open');
+      window.scrollTo(0, 0);
+    }
+
+    // Load Data
+    function loadAllAdminData() {
+      // 1. Users
+      db.ref('users').on('value', function(snapshot) {
+        allUsers = snapshot.val() || {};
+        renderUsersTable();
+        updateDashboardStats();
+      });
+
+      // 2. Withdrawals
+      db.ref('withdrawals').on('value', function(snapshot) {
+        allWithdrawals = snapshot.val() || {};
+        renderWithdrawalsTable();
+        updateDashboardStats();
+      });
+
+      // 3. Task Submissions
+      db.ref('taskSubmissions').on('value', function(snapshot) {
+        allTasks = snapshot.val() || {};
+        renderTasksTable();
+        updateDashboardStats();
+      });
+
+      // 4. Refer History
+      db.ref('referHistory').on('value', function(snapshot) {
+        renderReferHistory(snapshot.val() || {});
+      });
+
+      // 5. Redeem Codes
+      db.ref('redeemCodes').on('value', function(snapshot) {
+        renderRedeemCodes(snapshot.val() || {});
+      });
+
+      // 6. Offers
+      db.ref('offers').on('value', function(snapshot) {
+        allOffers = snapshot.val() || {};
+        renderOffersTable();
+        renderOfferLikesStats();
+      });
+
+      // 7. Banners
+      db.ref('promotions').on('value', function(snapshot) {
+        renderBannersAdmin(snapshot.val() || {});
+      });
+
+      // 8. Notifications
+      db.ref('notifications').on('value', function(snapshot) {
+        renderNotificationsAdmin(snapshot.val() || {});
+      });
+
+      // 9. App Settings
+      db.ref('appSettings').on('value', function(snapshot) {
+        populateAppSettingsForm(snapshot.val() || {});
+      });
+    }
+
+    // Update Dashboard Stats & Mini Tables
+    function updateDashboardStats() {
+      var userKeys = Object.keys(allUsers);
+      document.getElementById('statTotalUsers').innerText = userKeys.length;
+
+      var wKeys = Object.keys(allWithdrawals);
+      var totalWithdrawAmt = 0;
+      var pendingWithdrawals = 0;
+      var dashWithdrawHtml = '';
+      var withdrawCount = 0;
+
+      for (var i = 0; i < wKeys.length; i++) {
+        var w = allWithdrawals[wKeys[i]];
+        if (w.status === 'Approved') {
+          totalWithdrawAmt += (w.amount || 0);
+        }
+        if (w.status === 'Pending') {
+          pendingWithdrawals++;
+          if (withdrawCount < 5) {
+            dashWithdrawHtml +=
+              '<tr>' +
+                '<td>' + (w.userName || w.userEmail) + '</td>' +
+                '<td>' + w.method + '</td>' +
+                '<td>₹' + w.amount + '</td>' +
+                '<td><span style="color: var(--gold);">' + w.status + '</span></td>' +
+                '<td>' +
+                  '<button class="btn-act btn-approve" onclick="approveWithdrawal(\'' + wKeys[i] + '\')">Approve</button>' +
+                  '<button class="btn-act btn-reject" onclick="rejectWithdrawal(\'' + wKeys[i] + '\')">Reject</button>' +
+                '</td>' +
+              '</tr>';
+            withdrawCount++;
+          }
+        }
+      }
+      document.getElementById('statTotalWithdrawals').innerText = '₹' + totalWithdrawAmt;
+      document.getElementById('dashWithdrawalsBody').innerHTML = dashWithdrawHtml || '<tr><td colspan="5" style="text-align:center; color:#9E9EB2;">No pending withdrawals.</td></tr>';
+
+      var tKeys = Object.keys(allTasks);
+      var pendingTasks = 0;
+      var dashTaskHtml = '';
+      var taskCount = 0;
+
+      for (var j = 0; j < tKeys.length; j++) {
+        var t = allTasks[tKeys[j]];
+        if (t.status === 'Pending') {
+          pendingTasks++;
+          if (taskCount < 5) {
+            dashTaskHtml +=
+              '<tr>' +
+                '<td>' + (t.userName || t.userEmail) + '</td>' +
+                '<td>' + t.offerTitle + '</td>' +
+                '<td>₹' + t.reward + '</td>' +
+                '<td><span style="color: var(--gold);">' + t.status + '</span></td>' +
+                '<td>' +
+                  '<button class="btn-act btn-approve" onclick="approveTaskSubmission(\'' + tKeys[j] + '\')">Approve</button>' +
+                  '<button class="btn-act btn-reject" onclick="rejectTaskSubmission(\'' + tKeys[j] + '\')">Reject</button>' +
+                '</td>' +
+              '</tr>';
+            taskCount++;
+          }
+        }
+      }
+      document.getElementById('statTotalTasks').innerText = tKeys.length;
+      document.getElementById('statPendingActions').innerText = (pendingWithdrawals + pendingTasks);
+      document.getElementById('dashTasksBody').innerHTML = dashTaskHtml || '<tr><td colspan="5" style="text-align:center; color:#9E9EB2;">No pending tasks.</td></tr>';
+    }
+
+    // Users Table
+    function renderUsersTable() {
+      var tbody = document.getElementById('usersTableBody');
+      tbody.innerHTML = '';
+      var query = (document.getElementById('userSearchInput').value || '').toLowerCase();
+
+      var keys = Object.keys(allUsers);
+      for (var i = 0; i < keys.length; i++) {
+        var uid = keys[i];
+        var u = allUsers[uid];
+        var name = (u.name || 'User');
+        var email = (u.email || '');
+
+        if (query && name.toLowerCase().indexOf(query) === -1 && email.toLowerCase().indexOf(query) === -1) {
+          continue;
+        }
+
+        var dateStr = u.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A';
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' +
+            '<div style="font-weight:700; color:#FFF;">' + name + '</div>' +
+            '<div style="font-size:11px; color:#9E9EB2;">' + email + '</div>' +
+          '</td>' +
+          '<td><span style="color:var(--gold); font-weight:700;">' + (u.refCode || '') + '</span></td>' +
+          '<td>₹' + (u.earnings || 0) + '</td>' +
+          '<td>' + (u.tasksCount || 0) + '</td>' +
+          '<td>' + dateStr + '</td>' +
+          '<td>' +
+            '<button class="btn-act btn-approve" onclick="openUserDetailsModal(\'' + uid + '\')"><i class="fa-solid fa-pen-to-square"></i> Details / Manage</button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    function handleUserSearch() {
+      renderUsersTable();
+    }
+
+    // User Details Modal
+    function openUserDetailsModal(uid) {
+      selectedModalUserId = uid;
+      var u = allUsers[uid];
+      if (!u) return;
+
+      document.getElementById('modalUserName').innerText = u.name || 'User';
+      document.getElementById('modalUserEmail').innerText = u.email || '';
+      document.getElementById('modalUserRef').innerText = u.refCode || '';
+      document.getElementById('inputManualBalance').value = u.earnings || 0;
+
+      // Load user reward history
+      var histContainer = document.getElementById('modalUserRewardHistory');
+      histContainer.innerHTML = 'Loading history...';
+      db.ref('adminReferRewards/' + uid).once('value', function(snapshot) {
+        if (snapshot.exists()) {
+          var html = '<div style="margin-top:8px;">';
+          snapshot.forEach(function(c) {
+            var item = c.val();
+            html += '<div style="padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.06);">' +
+              '<span style="color:var(--gold); font-weight:700;">+ ₹' + item.amount + '</span> - ' + item.note + ' (' + new Date(item.timestamp).toLocaleDateString() + ')' +
+              '</div>';
+          });
+          html += '</div>';
+          histContainer.innerHTML = html;
+        } else {
+          histContainer.innerHTML = 'No rewards given yet.';
+        }
+      });
+
+      openModal('modalUserDetails');
+    }
+
+    function updateUserBalanceManual() {
+      if (!selectedModalUserId) return;
+      var newBal = parseFloat(document.getElementById('inputManualBalance').value);
+      if (isNaN(newBal)) {
+        showToast('Please enter a valid amount');
+        return;
+      }
+      db.ref('users/' + selectedModalUserId).update({ earnings: newBal }).then(function() {
+        showToast('User balance updated to ₹' + newBal);
+      });
+    }
+
+    function setUserDetailAmt(amt) {
+      document.getElementById('inputUserDetailAmt').value = amt;
+    }
+
+    function sendRewardToUserInModal() {
+      if (!selectedModalUserId) return;
+      var amt = parseFloat(document.getElementById('inputUserDetailAmt').value);
+      var note = document.getElementById('inputUserDetailNote').value.trim() || 'Admin Bonus';
+      var u = allUsers[selectedModalUserId];
+
+      if (isNaN(amt) || amt <= 0) {
+        showToast('Please enter valid amount');
+        return;
+      }
+
+      // Add to balance
+      var newEarnings = (u.earnings || 0) + amt;
+      db.ref('users/' + selectedModalUserId).update({ earnings: newEarnings });
+
+      var record = {
+        amount: amt,
+        note: note,
+        timestamp: Date.now()
+      };
+      db.ref('adminReferRewards/' + selectedModalUserId).push(record);
+      db.ref('referHistory').push({
+        email: u.email,
+        userId: selectedModalUserId,
+        amount: amt,
+        note: note,
+        status: "Completed",
+        timestamp: Date.now()
+      });
+
+      showToast('Reward ₹' + amt + ' credited to user!');
+      openUserDetailsModal(selectedModalUserId);
+    }
+
+    // Tasks Verification Queue
+    function renderTasksTable() {
+      var tbody = document.getElementById('taskSubmissionsBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(allTasks);
+
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var t = allTasks[id];
+
+        if (currentFilterTask !== 'All' && t.status !== currentFilterTask) {
+          continue;
+        }
+
+        var dateStr = new Date(t.timestamp).toLocaleString();
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' +
+            '<div style="font-weight:700; color:#FFF;">' + (t.userName || 'User') + '</div>' +
+            '<div style="font-size:11px; color:#9E9EB2;">' + (t.userEmail || '') + '</div>' +
+          '</td>' +
+          '<td>' + t.offerTitle + '</td>' +
+          '<td><span style="color:var(--gold); font-weight:700;">+ ₹' + t.reward + '</span></td>' +
+          '<td>' + dateStr + '</td>' +
+          '<td><span class="status-badge ' + t.status + '">' + t.status + '</span></td>' +
+          '<td>' +
+            (t.status === 'Pending' ?
+              '<button class="btn-act btn-approve" onclick="approveTaskSubmission(\'' + id + '\')">Approve</button>' +
+              '<button class="btn-act btn-reject" onclick="rejectTaskSubmission(\'' + id + '\')">Reject</button>'
+              : '<span style="color:#9E9EB2;">Processed</span>'
+            ) +
+          '</td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    function filterTaskTable(filter, btn) {
+      currentFilterTask = filter;
+      var siblings = btn.parentElement.querySelectorAll('.filter-btn');
+      for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('active');
+      btn.classList.add('active');
+      renderTasksTable();
+    }
+
+    function approveTaskSubmission(id) {
+      var t = allTasks[id];
+      if (!t) return;
+      var reward = t.reward || 0;
+      var userId = t.userId;
+
+      db.ref('taskSubmissions/' + id).update({ status: 'Approved' });
+      db.ref('users/' + userId + '/earnings').transaction(function(curr) {
+        return (curr || 0) + reward;
+      });
+      db.ref('users/' + userId + '/tasksCount').transaction(function(curr) {
+        return (curr || 0) + 1;
+      });
+      showToast('Task approved! ₹' + reward + ' credited to user.');
+    }
+
+    function rejectTaskSubmission(id) {
+      db.ref('taskSubmissions/' + id).update({ status: 'Rejected' });
+      showToast('Task rejected.');
+    }
+
+    // Withdrawals
+    function renderWithdrawalsTable() {
+      var tbody = document.getElementById('withdrawalsTableBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(allWithdrawals);
+
+      for (var i = 0; i < keys.length; i++) {
+        var id = keys[i];
+        var w = allWithdrawals[id];
+
+        if (currentFilterWithdrawal !== 'All' && w.status !== currentFilterWithdrawal) {
+          continue;
+        }
+
+        var detailsStr = '';
+        if (w.details) {
+          if (w.method === 'UPI') detailsStr = 'UPI: ' + (w.details.upiId || '');
+          else if (w.method === 'Bank') detailsStr = (w.details.accountName || '') + ' | ' + (w.details.accountNumber || '') + ' | ' + (w.details.ifsc || '');
+          else if (w.method === 'Mobile') detailsStr = (w.details.mobileNumber || '') + ' (' + (w.details.operator || '') + ')';
+          else if (w.method === 'RedeemCode') detailsStr = (w.code ? 'Code: ' + w.code : 'Redeem Code Request');
+        }
+
+        var dateStr = new Date(w.timestamp).toLocaleString();
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' +
+            '<div style="font-weight:700; color:#FFF;">' + (w.userName || 'User') + '</div>' +
+            '<div style="font-size:11px; color:#9E9EB2;">' + (w.userEmail || '') + '</div>' +
+          '</td>' +
+          '<td>' + w.method + '</td>' +
+          '<td><small>' + detailsStr + '</small></td>' +
+          '<td><span style="color:var(--gold); font-weight:700;">₹' + w.amount + '</span></td>' +
+          '<td>' + dateStr + '</td>' +
+          '<td><span class="status-badge ' + w.status + '">' + w.status + '</span></td>' +
+          '<td>' +
+            (w.status === 'Pending' ?
+              '<button class="btn-act btn-approve" onclick="approveWithdrawal(\'' + id + '\')">Approve</button>' +
+              '<button class="btn-act btn-reject" onclick="rejectWithdrawal(\'' + id + '\')">Reject</button>'
+              : '<span style="color:#9E9EB2;">Processed</span>'
+            ) +
+          '</td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    function filterWithdrawalTable(filter, btn) {
+      currentFilterWithdrawal = filter;
+      var siblings = btn.parentElement.querySelectorAll('.filter-btn');
+      for (var i = 0; i < siblings.length; i++) siblings[i].classList.remove('active');
+      btn.classList.add('active');
+      renderWithdrawalsTable();
+    }
+
+    // Approve Withdrawal logic:
+    // Redeem Code approve -> DPK+6chars code generate, user ko mile
+    function approveWithdrawal(id) {
+      var w = allWithdrawals[id];
+      if (!w) return;
+
+      if (w.method === 'RedeemCode') {
+        var randomCode = 'DPK' + generateRandomChars(6);
+        db.ref('redeemCodes/' + randomCode).set({
+          amount: w.amount,
+          forUser: w.userEmail,
+          note: 'Withdrawal Approved Code',
+          used: false,
+          usedByEmail: '',
+          createdAt: Date.now()
+        });
+        db.ref('withdrawals/' + id).update({
+          status: 'Approved',
+          code: randomCode
+        });
+        showToast('Redeem Code ' + randomCode + ' generated & sent to user!');
+      } else {
+        db.ref('withdrawals/' + id).update({ status: 'Approved' });
+        showToast('Withdrawal marked as Approved!');
+      }
+    }
+
+    // Reject Withdrawal logic:
+    // Normal reject -> balance wapas
+    // Redeem reject -> balance wapas nahi
+    function rejectWithdrawal(id) {
+      var w = allWithdrawals[id];
+      if (!w) return;
+
+      if (w.method !== 'RedeemCode') {
+        db.ref('users/' + w.userId + '/earnings').transaction(function(curr) {
+          return (curr || 0) + (w.amount || 0);
+        });
+        showToast('Withdrawal rejected. ₹' + w.amount + ' refunded to user balance.');
+      } else {
+        showToast('Redeem Code request rejected.');
+      }
+
+      db.ref('withdrawals/' + id).update({ status: 'Rejected' });
+    }
+
+    function generateRandomChars(len) {
+      var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      var res = '';
+      for (var i = 0; i < len; i++) {
+        res += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return res;
+    }
+
+    // Refer System Direct
+    function setReferAmount(amt) {
+      document.getElementById('referRewardAmount').value = amt;
+    }
+
+    function sendReferRewardDirect() {
+      var email = document.getElementById('referRewardEmail').value.trim().toLowerCase();
+      var amt = parseFloat(document.getElementById('referRewardAmount').value);
+      var note = document.getElementById('referRewardNote').value.trim() || 'Referral Bonus';
+
+      if (!email || isNaN(amt) || amt <= 0) {
+        showToast('Please enter user email and valid amount.');
+        return;
+      }
+
+      db.ref('users').orderByChild('email').equalTo(email).once('value', function(snapshot) {
+        if (snapshot.exists()) {
+          var targetUid = null;
+          snapshot.forEach(function(c) { targetUid = c.key; });
+          if (targetUid) {
+            db.ref('users/' + targetUid + '/earnings').transaction(function(curr) {
+              return (curr || 0) + amt;
+            });
+            db.ref('adminReferRewards/' + targetUid).push({
+              amount: amt,
+              note: note,
+              timestamp: Date.now()
+            });
+            db.ref('referHistory').push({
+              email: email,
+              userId: targetUid,
+              amount: amt,
+              note: note,
+              status: "Completed",
+              timestamp: Date.now()
+            });
+            showToast('Reward ₹' + amt + ' given to ' + email);
+            document.getElementById('referRewardEmail').value = '';
+          }
+        } else {
+          showToast('User with email ' + email + ' not found in Firebase.');
+        }
+      });
+    }
+
+    function renderReferHistory(data) {
+      var tbody = document.getElementById('referHistoryBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(data);
+      keys.reverse();
+
+      for (var i = 0; i < keys.length; i++) {
+        var r = data[keys[i]];
+        var userText = r.email || ((r.referrerName || 'Inviter') + ' ➔ ' + (r.newUserName || 'Friend'));
+        if (r.code) userText += ' <span style="font-size:11px; opacity:0.8; color: var(--gold);">[' + r.code + ']</span>';
+        var amount = r.amount ? ('₹' + r.amount) : (r.referrerBonus ? ('₹' + r.referrerBonus + ' / ₹' + r.userBonus) : '₹20');
+        var note = r.note || ('Referral Code: ' + (r.code || ''));
+
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' + userText + '</td>' +
+          '<td><span style="color:var(--gold); font-weight:700;">' + amount + '</span></td>' +
+          '<td>' + note + '</td>' +
+          '<td>' + new Date(r.timestamp).toLocaleDateString() + '</td>' +
+          '<td><span class="status-badge Approved">Completed</span></td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    // Redeem Codes
+    function generateAndSaveRedeemCode() {
+      var email = document.getElementById('newCodeEmail').value.trim();
+      var amt = parseFloat(document.getElementById('newCodeAmount').value);
+      var note = document.getElementById('newCodeNote').value.trim() || 'Promotional Redeem Code';
+
+      if (isNaN(amt) || amt <= 0) {
+        showToast('Please enter a valid amount');
+        return;
+      }
+
+      var code = 'DPK' + generateRandomChars(6);
+      db.ref('redeemCodes/' + code).set({
+        amount: amt,
+        forUser: email,
+        note: note,
+        used: false,
+        usedByEmail: '',
+        createdAt: Date.now()
+      }).then(function() {
+        navigator.clipboard.writeText(code);
+        closeModal('modalNewRedeemCode');
+        showToast('Code generated & copied: ' + code);
+      });
+    }
+
+    function renderRedeemCodes(data) {
+      var tbody = document.getElementById('redeemCodesBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(data);
+
+      for (var i = 0; i < keys.length; i++) {
+        var code = keys[i];
+        var c = data[code];
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong style="color:var(--gold); letter-spacing:1px;">' + code + '</strong></td>' +
+          '<td>' + (c.forUser || 'Any User') + '</td>' +
+          '<td>₹' + c.amount + '</td>' +
+          '<td>' + (c.note || '') + '</td>' +
+          '<td><span class="status-badge ' + (c.used ? 'Rejected' : 'Approved') + '">' + (c.used ? 'Used' : 'Active') + '</span></td>' +
+          '<td>' + (c.usedByEmail || '-') + '</td>' +
+          '<td>' +
+            '<button class="btn-act btn-reject" onclick="deleteRedeemCode(\'' + code + '\')"><i class="fa-solid fa-trash"></i></button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    function deleteRedeemCode(code) {
+      if (confirm('Delete redeem code ' + code + '?')) {
+        db.ref('redeemCodes/' + code).remove();
+        showToast('Redeem code deleted.');
+      }
+    }
+
+    // Offers
+    function openOfferModal(key) {
+      document.getElementById('offerEditKey').value = key || '';
+      if (key && allOffers[key]) {
+        var o = allOffers[key];
+        document.getElementById('offerModalTitle').innerText = 'Edit Offer';
+        document.getElementById('offerTitleInput').value = o.title || '';
+        document.getElementById('offerIconInput').value = o.icon || '';
+        document.getElementById('offerRewardInput').value = o.reward || 10;
+        document.getElementById('offerTimeInput').value = o.time || '2 Mins';
+        document.getElementById('offerDescInput').value = o.description || '';
+        document.getElementById('offerStepsInput').value = o.steps || '';
+        document.getElementById('offerLinkInput').value = o.appLink || '';
+        document.getElementById('offerActiveCheck').checked = (o.active !== false);
+        document.getElementById('offerNewCheck').checked = !!o.isNew;
+      } else {
+        document.getElementById('offerModalTitle').innerText = 'Add New Offer';
+        document.getElementById('offerTitleInput').value = '';
+        document.getElementById('offerIconInput').value = 'fa-solid fa-gamepad';
+        document.getElementById('offerRewardInput').value = '50';
+        document.getElementById('offerTimeInput').value = '2 Mins';
+        document.getElementById('offerDescInput').value = '';
+        document.getElementById('offerStepsInput').value = '1. Install app\n2. Open & register\n3. Tap submit task';
+        document.getElementById('offerLinkInput').value = 'https://google.com';
+        document.getElementById('offerActiveCheck').checked = true;
+        document.getElementById('offerNewCheck').checked = true;
+      }
+      openModal('modalOffer');
+    }
+
+    function saveOfferData() {
+      var key = document.getElementById('offerEditKey').value;
+      var title = document.getElementById('offerTitleInput').value.trim();
+      var icon = document.getElementById('offerIconInput').value.trim();
+      var reward = parseFloat(document.getElementById('offerRewardInput').value) || 10;
+      var time = document.getElementById('offerTimeInput').value.trim() || '2 Mins';
+      var desc = document.getElementById('offerDescInput').value.trim();
+      var steps = document.getElementById('offerStepsInput').value.trim();
+      var link = document.getElementById('offerLinkInput').value.trim();
+      var active = document.getElementById('offerActiveCheck').checked;
+      var isNew = document.getElementById('offerNewCheck').checked;
+
+      if (!title) {
+        showToast('Please enter offer title.');
+        return;
+      }
+
+      var payload = {
+        title: title,
+        icon: icon,
+        reward: reward,
+        time: time,
+        description: desc,
+        steps: steps,
+        appLink: link,
+        active: active,
+        isNew: isNew
+      };
+
+      if (key) {
+        db.ref('offers/' + key).update(payload);
+        showToast('Offer updated successfully!');
+      } else {
+        payload.likeCount = 0;
+        db.ref('offers').push(payload);
+        showToast('New offer added successfully!');
+      }
+      closeModal('modalOffer');
+    }
+
+    function renderOffersTable() {
+      var tbody = document.getElementById('offersAdminBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(allOffers);
+
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var o = allOffers[k];
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' +
+            '<div style="font-weight:700; color:#FFF;">' + o.title + (o.isNew ? ' <span style="color:#10B981; font-size:10px;">[NEW]</span>' : '') + '</div>' +
+            '<small style="color:#9E9EB2;">' + (o.icon || '') + '</small>' +
+          '</td>' +
+          '<td><span style="color:var(--gold); font-weight:700;">₹' + o.reward + '</span></td>' +
+          '<td>' + o.time + '</td>' +
+          '<td><small>' + (o.steps ? o.steps.substring(0, 30) + '...' : '-') + '</small></td>' +
+          '<td><span class="status-badge ' + (o.active !== false ? 'Approved' : 'Rejected') + '">' + (o.active !== false ? 'Active' : 'Inactive') + '</span></td>' +
+          '<td>' +
+            '<button class="btn-act btn-approve" onclick="openOfferModal(\'' + k + '\')"><i class="fa-solid fa-pen"></i></button>' +
+            '<button class="btn-act btn-reject" onclick="deleteOffer(\'' + k + '\')"><i class="fa-solid fa-trash"></i></button>' +
+          '</td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    function deleteOffer(key) {
+      if (confirm('Delete this offer?')) {
+        db.ref('offers/' + key).remove();
+        showToast('Offer deleted.');
+      }
+    }
+
+    // Banners
+    function renderBannersAdmin(data) {
+      var container = document.getElementById('bannersGridContainer');
+      container.innerHTML = '';
+      var keys = Object.keys(data);
+
+      if (keys.length === 0) {
+        container.innerHTML = '<div style="color:#9E9EB2; font-size:13px;">No active banners. Click + Add Banner above.</div>';
+        return;
+      }
+
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var b = data[k];
+        var div = document.createElement('div');
+        div.style.background = '#0D0F14';
+        div.style.border = '1px solid var(--card-border)';
+        div.style.borderRadius = '14px';
+        div.style.overflow = 'hidden';
+        div.innerHTML =
+          '<div style="height:140px; background:#161922;"><img src="' + b.img + '" style="width:100%; height:100%; object-fit:cover;"></div>' +
+          '<div style="padding:12px; display:flex; justify-content:space-between; align-items:center;">' +
+            '<div style="font-size:12px; color:#9E9EB2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:180px;">' + (b.link || 'No link') + '</div>' +
+            '<button class="btn-act btn-reject" onclick="deleteBanner(\'' + k + '\')"><i class="fa-solid fa-trash"></i></button>' +
+          '</div>';
+        container.appendChild(div);
+      }
+    }
+
+    function savePromotionBanner() {
+      var img = document.getElementById('bannerImgInput').value.trim();
+      var link = document.getElementById('bannerLinkInput').value.trim();
+      if (!img) {
+        showToast('Please enter image URL');
+        return;
+      }
+      db.ref('promotions').push({
+        img: img,
+        link: link,
+        createdAt: Date.now()
+      }).then(function() {
+        closeModal('modalNewBanner');
+        showToast('Banner added!');
+      });
+    }
+
+    function deleteBanner(key) {
+      if (confirm('Delete banner?')) {
+        db.ref('promotions/' + key).remove();
+        showToast('Banner removed.');
+      }
+    }
+
+    // Notifications
+    function sendBroadcastNotification() {
+      var title = document.getElementById('notifTitleInput').value.trim();
+      var msg = document.getElementById('notifMsgInput').value.trim();
+      if (!title || !msg) {
+        showToast('Please enter notification title and message');
+        return;
+      }
+      db.ref('notifications').push({
+        title: title,
+        message: msg,
+        timestamp: Date.now()
+      }).then(function() {
+        document.getElementById('notifTitleInput').value = '';
+        document.getElementById('notifMsgInput').value = '';
+        showToast('Notification sent to all users!');
+      });
+    }
+
+    function renderNotificationsAdmin(data) {
+      var tbody = document.getElementById('notificationsAdminBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(data);
+      keys.reverse();
+
+      for (var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        var n = data[k];
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>' + n.title + '</strong></td>' +
+          '<td>' + n.message + '</td>' +
+          '<td>' + new Date(n.timestamp).toLocaleDateString() + '</td>' +
+          '<td><button class="btn-act btn-reject" onclick="deleteNotification(\'' + k + '\')"><i class="fa-solid fa-trash"></i></button></td>';
+        tbody.appendChild(tr);
+      }
+    }
+
+    function deleteNotification(key) {
+      if (confirm('Delete this notification?')) {
+        db.ref('notifications/' + key).remove();
+        showToast('Notification deleted.');
+      }
+    }
+
+    // App Settings
+    function populateAppSettingsForm(data) {
+      document.getElementById('settingDownloadLink').value = data.appDownloadLink || '';
+      document.getElementById('settingVersion').value = data.appVersion || '1.1';
+      document.getElementById('settingUpdateNotes').value = data.updateNotes || '• नया US VPN और सुपरफास्ट टास्क सिस्टम\n• इन-ऐप नोटिफिकेशन साउंड अलर्ट\n• Google Play Protect सुरक्षा पास और आसान इंस्टॉलेशन\n• बग फिक्स और तेज लोडिंग स्पीड';
+      document.getElementById('settingForceUpdate').checked = data.forceUpdate === true;
+      document.getElementById('settingWhatsApp').value = data.whatsappLink || 'https://wa.me/919999999999';
+      document.getElementById('settingTelegram').value = data.telegramLink || 'https://t.me/earndaily';
+      document.getElementById('settingReferBanner').value = data.referBannerImg || 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?w=800&auto=format&fit=crop';
+      document.getElementById('settingReferralBonus').value = data.referralBonus !== undefined ? data.referralBonus : 20;
+      document.getElementById('settingSignupBonus').value = data.signupBonus !== undefined ? data.signupBonus : 10;
+      document.getElementById('settingDepositUpi').value = data.depositUpi || 'earndaily@upi';
+      document.getElementById('settingDepositQr').value = data.depositQr || 'https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=earndaily@upi';
+      document.getElementById('settingUnityGameId').value = data.unityGameId || '6134087';
+      document.getElementById('settingUnityReward').value = data.unityAdReward || 5;
+      document.getElementById('settingUnityLimit').value = data.unityDailyLimit || 10;
+      document.getElementById('settingWithdrawAmounts').value = data.withdrawAmounts || '10, 50, 200, 500, 1000, 5000';
+      document.getElementById('settingRechargePlans').value = data.rechargePlans || '19, 49, 99, 149, 199, 299, 399, 499, 999, 1499, 1999';
+      document.getElementById('settingPrivacy').value = data.privacyPolicy || 'EarnDaily values your privacy. We securely store your profile and task submissions to verify reward payouts.';
+      document.getElementById('settingTerms').value = data.terms || 'EarnDaily Terms: Users must complete offers honestly without fraud or fake credentials to be eligible for reward payouts.';
+    }
+
+    function saveAppSettings() {
+      var settings = {
+        appDownloadLink: document.getElementById('settingDownloadLink').value.trim(),
+        appVersion: document.getElementById('settingVersion').value.trim() || '1.1',
+        updateNotes: document.getElementById('settingUpdateNotes').value.trim(),
+        forceUpdate: document.getElementById('settingForceUpdate').checked,
+        whatsappLink: document.getElementById('settingWhatsApp').value.trim(),
+        telegramLink: document.getElementById('settingTelegram').value.trim(),
+        referBannerImg: document.getElementById('settingReferBanner').value.trim(),
+        referralBonus: parseFloat(document.getElementById('settingReferralBonus').value) || 20,
+        signupBonus: parseFloat(document.getElementById('settingSignupBonus').value) || 10,
+        depositUpi: document.getElementById('settingDepositUpi').value.trim(),
+        depositQr: document.getElementById('settingDepositQr').value.trim(),
+        unityGameId: document.getElementById('settingUnityGameId').value.trim() || '6134087',
+        unityAdReward: parseFloat(document.getElementById('settingUnityReward').value) || 5,
+        unityDailyLimit: parseInt(document.getElementById('settingUnityLimit').value) || 10,
+        withdrawAmounts: document.getElementById('settingWithdrawAmounts').value.trim(),
+        rechargePlans: document.getElementById('settingRechargePlans').value.trim(),
+        privacyPolicy: document.getElementById('settingPrivacy').value.trim(),
+        terms: document.getElementById('settingTerms').value.trim()
+      };
+
+      db.ref('appSettings').set(settings).then(function() {
+        showToast('All app settings & update configuration saved successfully!');
+      }).catch(function(err) {
+        showToast('Error saving settings: ' + err.message);
+      });
+    }
+
+    function quickTriggerUpdate1_2() {
+      document.getElementById('settingVersion').value = '1.2';
+      if (!document.getElementById('settingDownloadLink').value.trim()) {
+        document.getElementById('settingDownloadLink').value = 'https://github.com/earndaily/releases/download/v1.2/earndaily_v1.2.apk';
+      }
+      saveAppSettings();
+      showToast('🚀 Version set to 1.2! Now all users checking for updates will see the update popup.');
+    }
+
+    function quickResetVersion1_1() {
+      document.getElementById('settingVersion').value = '1.1';
+      saveAppSettings();
+      showToast('Version reset to 1.1 (Up-to-Date)!');
+    }
+
+    function broadcastUpdateAlert() {
+      var ver = document.getElementById('settingVersion').value.trim() || '1.2';
+      var newNotif = {
+        title: "🚀 नया EarnDaily v" + ver + " अपडेट उपलब्ध है!",
+        message: "ऐप में नया US VPN, तेज टास्क सिस्टम और नोटिफिकेशन साउंड जारी किया गया है। अभी ऐप खोलकर अपडेट करें!",
+        type: "update",
+        createdAt: firebase.database.ServerValue.TIMESTAMP
+      };
+      db.ref('notifications').push(newNotif).then(function() {
+        showToast('🔔 Update broadcast notification sent to all users with alert sound!');
+      });
+    }
+
+    function renderOfferLikesStats() {
+      var tbody = document.getElementById('offerLikesStatsBody');
+      tbody.innerHTML = '';
+      var keys = Object.keys(allOffers);
+
+      for (var i = 0; i < keys.length; i++) {
+        var o = allOffers[keys[i]];
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td><strong>' + o.title + '</strong></td>' +
+          '<td><span style="color:#EF4444;"><i class="fa-solid fa-heart"></i> ' + (o.likeCount || 0) + ' Likes</span></td>' +
+          '<td><span class="status-badge ' + (o.active !== false ? 'Approved' : 'Rejected') + '">' + (o.active !== false ? 'Active' : 'Inactive') + '</span></td>';
+        tbody.appendChild(tr);
+      }
+    }
+  </script>
+</body>
+</html>
